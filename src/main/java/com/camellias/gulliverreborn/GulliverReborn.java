@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.artemis.artemislib.compatibilities.sizeCap.ISizeCap;
 import com.artemis.artemislib.compatibilities.sizeCap.SizeCapPro;
+import com.camellias.gulliverreborn.network.ConfigSyncPacket;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
@@ -40,6 +41,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.passive.EntityOcelot;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.MobEffects;
@@ -71,6 +73,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -86,28 +91,39 @@ public class GulliverReborn
 	public static final String NAME = "Gulliver Reborn";
 	public static final String VERSION = "1.10";
 	public static final String MCVERSION = "1.12.2";
-	public static final String DEPENDENCIES = "required-after:forge@[14.23.5.2795,];" + "required-after:artemislib@[1.0.6,];";
-	public static final Logger LOGGER = LogManager.getLogger(NAME);
-	public static File config;
+    public static final String DEPENDENCIES = "required-after:forge@[14.23.5.2795,];" + "required-after:artemislib@[1.0.6,];";
+    public static final Logger LOGGER = LogManager.getLogger(NAME);
+    public static File config;
+    public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 	
 	public static DamageSource causeCrushingDamage(EntityLivingBase entity)
 	{
 		return new EntityDamageSource(MODID + ".crushing", entity);
 	}
 	
-	@EventHandler
-	public void preInit(FMLPreInitializationEvent event)
-	{
-		Config.registerConfig(event);
-		MinecraftForge.EVENT_BUS.register(new GulliverReborn());
-	}
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent event)
+    {
+        Config.registerConfig(event);
+        NETWORK.registerMessage(ConfigSyncPacket.Handler.class, ConfigSyncPacket.class, 0, Side.CLIENT);
+        MinecraftForge.EVENT_BUS.register(new GulliverReborn());
+    }
 	
-	@EventHandler
-	public void serverRegistries(FMLServerStartingEvent event)
-	{
-		event.registerServerCommand(new MyResizeCommand());
-		event.registerServerCommand(new OthersResizeCommand());
-	}
+    @EventHandler
+    public void serverRegistries(FMLServerStartingEvent event)
+    {
+        event.registerServerCommand(new MyResizeCommand());
+        event.registerServerCommand(new OthersResizeCommand());
+    }
+
+    @SubscribeEvent
+    public void onPlayerLogin(PlayerLoggedInEvent event)
+    {
+        if(!event.player.world.isRemote)
+        {
+            NETWORK.sendTo(new ConfigSyncPacket(), (EntityPlayerMP) event.player);
+        }
+    }
 	
 	@SubscribeEvent
 	public void onPlayerFall(LivingFallEvent event)
