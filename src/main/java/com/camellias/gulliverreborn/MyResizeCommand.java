@@ -52,13 +52,13 @@ public class MyResizeCommand extends CommandBase
 	@Override
 	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
 	{
-		return true;
+		return sender instanceof EntityPlayer && sender.canUseCommand(getRequiredPermissionLevel(), getName());
 	}
 	
 	@Override
 	public int getRequiredPermissionLevel()
 	{
-		return 0;
+		return 2;
 	}
 
 	@Override

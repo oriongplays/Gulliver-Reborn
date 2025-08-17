@@ -51,10 +51,10 @@ public class OthersResizeCommand extends CommandBase
 	}
 	
 	@Override
-	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
-	{
-		return true;
-	}
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender)
+    {
+        return sender.canUseCommand(getRequiredPermissionLevel(), getName());
+    }
 	
 	@Override
 	public int getRequiredPermissionLevel()
@@ -117,25 +117,25 @@ public class OthersResizeCommand extends CommandBase
 		if(Config.STRENGTH_MODIFIER) attributes.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(uuidStrength, "Player Strength", size - 1, 0));
 		if(Config.HEALTH_MODIFIER) attributes.put(SharedMonsterAttributes.MAX_HEALTH.getName(), new AttributeModifier(uuidHealth, "Player Health", (size - 1) * Config.HEALTH_MULTIPLIER, 2));
 		
-		if(size > 1)
-		{
-			((EntityPlayer) sender).getAttributeMap().applyAttributeModifiers(removeableAttributes);
-		}
-		else
-		{
-			((EntityPlayer) sender).getAttributeMap().removeAttributeModifiers(removeableAttributes);
-		}
-		
-		if(size < 1)
-		{
-			((EntityPlayer) sender).getAttributeMap().applyAttributeModifiers(removeableAttributes2);
-		}
-		else
-		{
-			((EntityPlayer) sender).getAttributeMap().removeAttributeModifiers(removeableAttributes2);
-		}
-		
-		player.getAttributeMap().applyAttributeModifiers(attributes);
+        if(size > 1)
+        {
+            player.getAttributeMap().applyAttributeModifiers(removeableAttributes);
+        }
+        else
+        {
+            player.getAttributeMap().removeAttributeModifiers(removeableAttributes);
+        }
+
+        if(size < 1)
+        {
+            player.getAttributeMap().applyAttributeModifiers(removeableAttributes2);
+        }
+        else
+        {
+            player.getAttributeMap().removeAttributeModifiers(removeableAttributes2);
+        }
+
+        player.getAttributeMap().applyAttributeModifiers(attributes);
 		player.setHealth(player.getMaxHealth());
 		
 		if(sender instanceof EntityPlayer) GulliverReborn.LOGGER.info(((EntityPlayer) sender).getDisplayNameString() + " set " + player.getDisplayNameString() +"'s size to " + size);
